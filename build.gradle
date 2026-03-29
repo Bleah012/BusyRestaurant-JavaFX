@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id 'application'
+    // This is the most stable version for modern IntelliJ/Gradle setups
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+group = 'com.busyrestaurant'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+javafx {
+    version = "17.0.2"
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+}
+
+dependencies {
+    // For our CRUD and Server communication
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+application {
+    mainClass = 'com.busyrestaurant.BusyRestaurantApplication'
+}
+
+test {
+    useJUnitPlatform()
+}

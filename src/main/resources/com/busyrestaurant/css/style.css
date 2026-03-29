@@ -1,0 +1,164 @@
+.root {
+    -fx-background-color: #ffffff;
+}
+
+.welcome-title {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.primary-button {
+    -fx-background-color: #e67e22; /* Your Primary Accent from Figma */
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-padding: 15 40 15 40;
+    -fx-background-radius: 30;
+}
+
+.primary-button:hover {
+    -fx-background-color: #d35400;
+}
+
+/* Sidebar Container */
+.sidebar {
+    -fx-background-color: #f8f9fa;
+    -fx-padding: 20;
+    -fx-border-color: #dee2e6;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* Category Buttons */
+.category-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2c3e50;
+    -fx-font-size: 16px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-min-width: 180;
+    -fx-padding: 10 15 10 15;
+    -fx-cursor: hand;
+}
+
+.category-button:hover {
+    -fx-background-color: #eeeeee;
+}
+
+/* Active Category Style */
+.category-button-active {
+    -fx-background-color: #e67e22; /* Your Orange Accent */
+    -fx-text-fill: white;
+}
+
+/* Food Grid Area */
+.menu-grid {
+    -fx-padding: 20;
+    -fx-background-color: #ffffff;
+}
+
+/* The Card Container */
+.food-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 15;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);
+    -fx-padding: 15;
+    -fx-alignment: CENTER;
+    -fx-min-width: 220;
+}
+
+/* Food Image Placeholder Style */
+.food-image-box {
+    -fx-background-color: #f1f2f6;
+    -fx-min-width: 180;
+    -fx-min-height: 140;
+    -fx-background-radius: 10;
+}
+
+.food-name {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2f3542;
+}
+
+.food-price {
+    -fx-font-size: 16px;
+    -fx-text-fill: #e67e22; /* Your Orange Accent */
+    -fx-font-weight: bold;
+}
+
+.add-button {
+    -fx-background-color: #2ed573;
+    -fx-text-fill: white;
+    -fx-background-radius: 20;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.add-button:hover {
+    -fx-background-color: #26af61;
+}
+
+/* Cart Sidebar */
+.cart-sidebar {
+    -fx-background-color: #fefefe;
+    -fx-padding: 20;
+    -fx-border-color: #dee2e6;
+    -fx-border-width: 0 0 0 1;
+    -fx-min-width: 300;
+}
+
+.cart-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.cart-item-row {
+    -fx-padding: 10 0 10 0;
+    -fx-border-color: #f1f2f6;
+    -fx-border-width: 0 0 1 0;
+}
+
+.checkout-button {
+    -fx-background-color: #e67e22; /* Your Orange Accent */
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+
+.total-label {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2f3542;
+}
+
+/* Kitchen View Styles */
+.kitchen-root {
+    -fx-background-color: #2c3e50; /* Dark professional theme for kitchen */
+    -fx-padding: 20;
+}
+
+.order-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 10;
+    -fx-padding: 15;
+    -fx-min-width: 280;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 0);
+}
+
+.order-header {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #e67e22; /* Your brand orange */
+    -fx-border-color: #eeeeee;
+    -fx-border-width: 0 0 1 0;
+}
+
+.done-button {
+    -fx-background-color: #27ae60;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
