@@ -1,8 +1,11 @@
 package com.busyrestaurant;
 
 import com.busyrestaurant.model.MenuItem;
+import com.busyrestaurant.util.DatabaseManager;
+import jakarta.persistence.EntityManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import java.util.List;
 
 public class MenuManager {
     private static MenuManager instance;
@@ -12,7 +15,8 @@ public class MenuManager {
 
     private MenuManager() {
         allItems = FXCollections.observableArrayList();
-        loadDefaultMenu();
+        // We no longer call loadDefaultMenu() here because
+        // loadFromDatabase() will be called from the Application start method.
     }
 
     public static MenuManager getInstance() {
@@ -23,38 +27,89 @@ public class MenuManager {
     }
 
     /**
-     * Initial data for the system.
-     * In a real app, this could load from a Database or JSON file.
+     * READ: Loads all items from the H2 Database into the ObservableList.
      */
-    private void loadDefaultMenu() {
-        allItems.add(new MenuItem("1", "Classic Burger", "Beef patty", 12.50, "Main Courses", "burger.jpg"));
-        allItems.add(new MenuItem("2", "Veggie Pizza", "Fresh veggies", 15.00, "Main Courses", "pizza.jpg"));
-        allItems.add(new MenuItem("3", "Pasta Carbonara", "Bacon & Cream", 14.20, "Main Courses", "pasta.jpg"));
-        allItems.add(new MenuItem("4", "Chicken Salad", "Grilled chicken", 10.00, "Appetizers", "salad.jpg"));
-        allItems.add(new MenuItem("5", "Coca Cola", "Chilled soda", 2.50, "Drinks", "burger.jpg")); // Reuse burger if soda.jpg missing
+    public void loadFromDatabase() {
+        EntityManager em = DatabaseManager.getEntityManager();
+        try {
+            List<MenuItem> fromDb = em.createQuery("SELECT m FROM MenuItem m", MenuItem.class).getResultList();
+            allItems.setAll(fromDb);
+            System.out.println("Successfully loaded " + fromDb.size() + " items from Database.");
+        } catch (Exception e) {
+            System.err.println("Error loading from database: " + e.getMessage());
+        } finally {
+            em.close();
+        }
     }
 
-    // --- CRUD OPERATIONS ---
+    // --- DATABASE CRUD OPERATIONS ---
 
-    // CREATE
+    /**
+     * CREATE: Saves a new item to the database and updates the UI list.
+     */
     public void addItem(MenuItem item) {
-        allItems.add(item);
+        EntityManager em = DatabaseManager.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(item); // Saves to the .mv.db file
+            em.getTransaction().commit();
+
+            allItems.add(item); // Updates the JavaFX UI
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
     }
 
-    // READ
+    /**
+     * READ: Returns the list for the TableView and MenuView.
+     */
     public ObservableList<MenuItem> getAllItems() {
         return allItems;
     }
 
-    // UPDATE
-    public void updateItem(int index, MenuItem newItem) {
-        if (index >= 0 && index < allItems.size()) {
-            allItems.set(index, newItem);
+    /**
+     * UPDATE: Updates an existing item in the database.
+     */
+    public void updateItem(MenuItem item) {
+        EntityManager em = DatabaseManager.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(item); // Updates the existing record based on ID
+            em.getTransaction().commit();
+
+            // Refresh the local list to ensure UI is in sync
+            loadFromDatabase();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally {
+            em.close();
         }
     }
 
-    // DELETE
+    /**
+     * DELETE: Removes an item from the database and the UI list.
+     */
     public void removeItem(MenuItem item) {
-        allItems.remove(item);
+        EntityManager em = DatabaseManager.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            // Find the "managed" version of the object before removing
+            MenuItem managedItem = em.find(MenuItem.class, item.getId());
+            if (managedItem != null) {
+                em.remove(managedItem);
+            }
+            em.getTransaction().commit();
+
+            allItems.remove(item); // Update UI
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
     }
 }

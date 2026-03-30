@@ -1,29 +1,38 @@
 package com.busyrestaurant;
 
+import com.busyrestaurant.util.DatabaseManager;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
 /**
  * Main Entry Point for the BusyRestaurant Self-Ordering System.
- * This class initializes the JavaFX Primary Stage.
+ * This class initializes the JavaFX Primary Stage and Database Connection.
  */
 public class BusyRestaurantApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // STEP 4.4 UPDATE:
-        // Launch the Kitchen View to start the server and listen for orders
-        WelcomeView.show(primaryStage);
-        //KitchenView.show(primaryStage);
-        //AdminView.show(primaryStage);
-        //MenuView.show(primaryStage);
+        try {
+            // 1. Initialize and Load the Menu from Database
+            MenuManager.getInstance().loadFromDatabase();
 
-        // Note: Once you confirm the server works, you can switch back
-        // to  KitchenView.show(primaryStage);for the customer-facing side.
+            System.out.println("✅ DATABASE READY & MENU LOADED");
+        } catch (Exception e) {
+            System.err.println("❌ INITIALIZATION ERROR: " + e.getMessage());
+        }
+
+        // 2. Launch the UI
+        WelcomeView.show(primaryStage);
+    }
+    /**
+     * Cleanly shut down the database factory when the app is closed.
+     */
+    @Override
+    public void stop() {
+        DatabaseManager.close();
     }
 
     public static void main(String[] args) {
-        // launch(args) tells the JVM to start the JavaFX application thread
         launch(args);
     }
 }

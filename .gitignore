@@ -35,3 +35,14 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Database files
+busy_db.mv.db
+busy_db.trace.db
+*.db
+
+# Build and IDE files
+build/
+.gradle/
+.idea/
+*.iml
