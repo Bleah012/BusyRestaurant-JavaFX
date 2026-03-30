@@ -12,7 +12,6 @@ import javafx.scene.layout.VBox;
 public class FoodCard extends VBox {
 
     public FoodCard(MenuItem item) {
-        // Set spacing between image, name, and price
         super(10);
         this.getStyleClass().add("food-card");
         this.setAlignment(Pos.CENTER);
@@ -22,23 +21,34 @@ public class FoodCard extends VBox {
         imageContainer.getStyleClass().add("food-image-box");
         imageContainer.setPrefSize(180, 140);
 
+        ImageView imageView = new ImageView();
+        imageView.setFitWidth(160);
+        imageView.setFitHeight(120);
+        imageView.setPreserveRatio(true);
+
         try {
-            // Load image from: src/main/resources/com/busyrestaurant/images/
-            String imagePath = "/com/busyrestaurant/images/" + item.getImagePath();
-            Image img = new Image(getClass().getResourceAsStream(imagePath));
+            String path = item.getImagePath();
+            Image img;
 
-            ImageView imageView = new ImageView(img);
-            imageView.setFitWidth(160);
-            imageView.setFitHeight(120);
-            imageView.setPreserveRatio(true);
+            // CHECK: Is this an external file URI (from Admin Upload) or an internal resource?
+            if (path.startsWith("file:") || path.startsWith("http")) {
+                // Load external file
+                img = new Image(path, true); // 'true' enables background loading
+            } else {
+                // Load from internal resources: src/main/resources/com/busyrestaurant/images/
+                String resourcePath = "/com/busyrestaurant/images/" + path;
+                img = new Image(getClass().getResourceAsStream(resourcePath));
+            }
 
+            imageView.setImage(img);
             imageContainer.getChildren().add(imageView);
+
         } catch (Exception e) {
-            // Fallback if the file (burger.jpg, etc.) is missing or misnamed
+            // Fallback for missing images
             Label errorLabel = new Label("Image Not Found");
             errorLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: gray;");
             imageContainer.getChildren().add(errorLabel);
-            System.err.println("Could not load image: " + item.getImagePath());
+            System.err.println("Could not load image path: " + item.getImagePath());
         }
 
         // 2. Name and Price
@@ -58,7 +68,6 @@ public class FoodCard extends VBox {
             System.out.println("Added to cart: " + item.getName());
         });
 
-        // Add all elements to this VBox
         this.getChildren().addAll(imageContainer, nameLabel, priceLabel, addButton);
     }
 }

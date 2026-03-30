@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 public class MenuView {
 
-    private static FlowPane foodGrid; // Global reference for filtering
+    private static FlowPane foodGrid;
 
     public static void show(Stage stage) {
         BorderPane root = new BorderPane();
@@ -31,13 +31,11 @@ public class MenuView {
         Label brandLabel = new Label("MENU");
         brandLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-padding: 0 0 20 0;");
 
-        // Step 6.3 & 6.4: Link Sidebar Buttons with specific actions
         Button btnAppetizers = createCategoryButton("Appetizers", false);
         Button btnMains = createCategoryButton("Main Courses", true);
         Button btnDrinks = createCategoryButton("Drinks", false);
         Button btnDesserts = createCategoryButton("Desserts", false);
 
-        // Add filtering actions to buttons
         btnAppetizers.setOnAction(e -> filterMenu("Appetizers", btnAppetizers));
         btnMains.setOnAction(e -> filterMenu("Main Courses", btnMains));
         btnDrinks.setOnAction(e -> filterMenu("Drinks", btnDrinks));
@@ -52,7 +50,6 @@ public class MenuView {
         foodGrid.setPadding(new Insets(25));
         foodGrid.getStyleClass().add("menu-grid");
 
-        // Step 6.1: Initial Load (Using MenuManager for future CRUD support)
         updateGrid("Main Courses");
 
         ScrollPane scrollPane = new ScrollPane(foodGrid);
@@ -102,15 +99,25 @@ public class MenuView {
         checkoutBtn.getStyleClass().add("checkout-button");
         checkoutBtn.setMaxWidth(Double.MAX_VALUE);
 
+        // --- UPDATED CHECKOUT LOGIC WITH DYNAMIC TABLE NUMBER ---
         checkoutBtn.setOnAction(e -> {
             if (!CartManager.getInstance().getCartItems().isEmpty()) {
-                Order newOrder = new Order("ORD-" + System.currentTimeMillis(), "Table 05");
+                // Using AppSettings.getTableNumber() instead of hardcoded string
+                Order newOrder = new Order("ORD-" + System.currentTimeMillis(), AppSettings.getTableNumber());
+
                 for (MenuItem item : CartManager.getInstance().getCartItems()) {
                     newOrder.addItem(item);
                 }
+
+                // Networking: Send to the Background Server
                 OrderClient.sendOrder(newOrder);
+
+                // Kitchen Sync: Add directly to the KitchenManager
+                KitchenManager.getInstance().addOrder(newOrder);
+
+                // UI Clean up
                 CartManager.getInstance().clearCart();
-                System.out.println("Order Sent!");
+                System.out.println("Order Sent from " + AppSettings.getTableNumber() + " successfully!");
             }
         });
 
@@ -128,20 +135,15 @@ public class MenuView {
         stage.setFullScreen(true);
     }
 
-    // Step 6.2: Filtering Logic
     private static void filterMenu(String category, Button activeBtn) {
-        // UI Polish: Update active state
         VBox sidebar = (VBox) activeBtn.getParent();
         sidebar.getChildren().forEach(node -> node.getStyleClass().remove("category-button-active"));
         activeBtn.getStyleClass().add("category-button-active");
-
-        // Refresh Grid
         updateGrid(category);
     }
 
     private static void updateGrid(String category) {
         foodGrid.getChildren().clear();
-        // Get items from MenuManager (Step 7 logic)
         List<MenuItem> filtered = MenuManager.getInstance().getAllItems().stream()
                 .filter(item -> item.getCategory().equalsIgnoreCase(category))
                 .collect(Collectors.toList());
