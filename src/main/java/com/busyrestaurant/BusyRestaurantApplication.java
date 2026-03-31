@@ -16,13 +16,16 @@ public class BusyRestaurantApplication extends Application {
             // 1. Initialize and Load the Menu from Database
             MenuManager.getInstance().loadFromDatabase();
 
-            System.out.println("✅ DATABASE READY & MENU LOADED");
+            System.out.println("DATABASE READY & MENU LOADED");
         } catch (Exception e) {
-            System.err.println("❌ INITIALIZATION ERROR: " + e.getMessage());
+            System.err.println("INITIALIZATION ERROR: " + e.getMessage());
         }
 
         // 2. Launch the UI
         WelcomeView.show(primaryStage);
+        //KitchenView.show(primaryStage);
+        //AdminView.show(primaryStage);
+        //MenuView.show(primaryStage);
     }
     /**
      * Cleanly shut down the database factory when the app is closed.

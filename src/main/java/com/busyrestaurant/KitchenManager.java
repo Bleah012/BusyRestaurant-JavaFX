@@ -34,4 +34,12 @@ public class KitchenManager {
     public void removeOrder(Order order) {
         activeOrders.remove(order);
     }
+
+    /**
+     * NEW: Clears all active orders from the kitchen.
+     * Useful for the "Reset Summary" button to clear the board after a rush.
+     */
+    public void resetSummary() {
+        activeOrders.clear();
+    }
 }

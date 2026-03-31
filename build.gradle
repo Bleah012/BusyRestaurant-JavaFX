@@ -45,3 +45,14 @@ application {
 test {
     useJUnitPlatform()
 }
+
+// --- FIX FOR ONEDRIVE / STALE OUTPUTS ---
+// This tells Gradle to ignore duplicate files during the build process
+// instead of crashing when OneDrive locks the build folder.
+tasks.withType(Copy).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.named('processResources') {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}

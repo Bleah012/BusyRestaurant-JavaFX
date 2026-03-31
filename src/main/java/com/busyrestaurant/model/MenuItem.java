@@ -26,9 +26,12 @@ public class MenuItem {
     @Column(name = "image_path", length = 512)
     private String imagePath;
 
+    // NEW: Stores admin-defined preferences (e.g., "Extra Sauce, No Onions")
+    @Column(name = "custom_options", length = 1024)
+    private String customOptions;
+
     /**
      * IMPORTANT: JPA requires a no-argument constructor.
-     * The database uses this to instantiate the object before filling it with data.
      */
     public MenuItem() {
     }
@@ -49,6 +52,7 @@ public class MenuItem {
     public double getPrice() { return price; }
     public String getCategory() { return category; }
     public String getImagePath() { return imagePath; }
+    public String getCustomOptions() { return customOptions; }
 
     // --- SETTERS ---
     public void setId(String id) { this.id = id; }
@@ -57,4 +61,5 @@ public class MenuItem {
     public void setPrice(double price) { this.price = price; }
     public void setCategory(String category) { this.category = category; }
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }
+    public void setCustomOptions(String customOptions) { this.customOptions = customOptions; }
 }

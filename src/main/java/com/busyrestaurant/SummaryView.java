@@ -22,7 +22,7 @@ public class SummaryView {
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: #f8f9fa;");
 
-        // --- TOP NAVIGATION BAR (Matching KitchenView) ---
+        // --- TOP NAVIGATION BAR ---
         HBox topBar = new HBox(15);
         topBar.setAlignment(Pos.CENTER_RIGHT);
         topBar.setPadding(new Insets(15, 30, 15, 30));
@@ -34,14 +34,23 @@ public class SummaryView {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        // --- NEW: RESET BUTTON ---
+        Button btnReset = new Button("Reset All Counts");
+        btnReset.setStyle("-fx-background-color: #c0392b; -fx-text-fill: white; -fx-background-radius: 5; -fx-padding: 8 15; -fx-font-weight: bold; -fx-cursor: hand;");
+        btnReset.setOnAction(e -> {
+            KitchenManager.getInstance().resetSummary();
+            refreshSummary(); // Immediately update the UI to show empty state
+        });
+
         Button btnTimeline = new Button("Timeline View");
         btnTimeline.setStyle("-fx-background-color: #3f3f3f; -fx-text-fill: #b3b3b3; -fx-background-radius: 5; -fx-padding: 8 15; -fx-cursor: hand;");
-        btnTimeline.setOnAction(e -> KitchenView.show(stage)); // Go back to cards
+        btnTimeline.setOnAction(e -> KitchenView.show(stage));
 
         Button btnSummary = new Button("Summary View");
         btnSummary.setStyle("-fx-background-color: #e67e22; -fx-text-fill: white; -fx-background-radius: 5; -fx-padding: 8 15;");
 
-        topBar.getChildren().addAll(brandTitle, spacer, btnTimeline, btnSummary);
+        // Added btnReset to the top bar
+        topBar.getChildren().addAll(brandTitle, spacer, btnReset, btnTimeline, btnSummary);
 
         // --- SUMMARY GRID ---
         summaryGrid = new FlowPane();
@@ -76,9 +85,15 @@ public class SummaryView {
             }
         }
 
-        // Create a card for each unique item
-        for (Map.Entry<String, Integer> entry : itemCounts.entrySet()) {
-            summaryGrid.getChildren().add(createSummaryCard(entry.getKey(), entry.getValue()));
+        if (itemCounts.isEmpty()) {
+            Label emptyMsg = new Label("No active items to display.");
+            emptyMsg.setStyle("-fx-text-fill: #888; -fx-font-size: 18px; -fx-padding: 50;");
+            summaryGrid.getChildren().add(emptyMsg);
+        } else {
+            // Create a card for each unique item
+            for (Map.Entry<String, Integer> entry : itemCounts.entrySet()) {
+                summaryGrid.getChildren().add(createSummaryCard(entry.getKey(), entry.getValue()));
+            }
         }
     }
 

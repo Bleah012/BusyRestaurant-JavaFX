@@ -7,10 +7,9 @@ import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.util.List;
@@ -22,131 +21,201 @@ public class MenuView {
 
     public static void show(Stage stage) {
         BorderPane root = new BorderPane();
+        root.setStyle("-fx-background-color: #f4f4f4;");
 
-        // 1. Sidebar (Left) - Category Navigation
-        VBox sidebar = new VBox(10);
-        sidebar.getStyleClass().add("sidebar");
-        sidebar.setPrefWidth(200);
+        // --- 1. SIDEBAR (Left) ---
+        VBox sidebar = new VBox(15);
+        sidebar.setPadding(new Insets(30, 20, 30, 20));
+        sidebar.setPrefWidth(220);
+        sidebar.setStyle("-fx-background-color: white;");
 
-        Label brandLabel = new Label("MENU");
-        brandLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-padding: 0 0 20 0;");
+        Label brandLabel = new Label("Menu");
+        brandLabel.setStyle("-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #333;");
 
+        // Added "All" button and set it as active by default
+        Button btnAll = createCategoryButton("All", true);
         Button btnAppetizers = createCategoryButton("Appetizers", false);
-        Button btnMains = createCategoryButton("Main Courses", true);
+        Button btnMains = createCategoryButton("Main Courses", false);
         Button btnDrinks = createCategoryButton("Drinks", false);
         Button btnDesserts = createCategoryButton("Desserts", false);
 
+        btnAll.setOnAction(e -> filterMenu("All", btnAll));
         btnAppetizers.setOnAction(e -> filterMenu("Appetizers", btnAppetizers));
         btnMains.setOnAction(e -> filterMenu("Main Courses", btnMains));
         btnDrinks.setOnAction(e -> filterMenu("Drinks", btnDrinks));
         btnDesserts.setOnAction(e -> filterMenu("Desserts", btnDesserts));
 
-        sidebar.getChildren().addAll(brandLabel, btnAppetizers, btnMains, btnDrinks, btnDesserts);
+        sidebar.getChildren().addAll(brandLabel, btnAll, btnAppetizers, btnMains, btnDrinks, btnDesserts);
 
-        // 2. Menu Content (Center) - The Food Grid
+        // --- 2. MENU CONTENT (Center) ---
         foodGrid = new FlowPane();
-        foodGrid.setHgap(25);
-        foodGrid.setVgap(25);
-        foodGrid.setPadding(new Insets(25));
-        foodGrid.getStyleClass().add("menu-grid");
+        foodGrid.setHgap(20);
+        foodGrid.setVgap(20);
+        foodGrid.setPadding(new Insets(30));
 
-        updateGrid("Main Courses");
+        // Initial Load: Show everything
+        updateGrid("All");
 
         ScrollPane scrollPane = new ScrollPane(foodGrid);
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color:transparent;");
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
 
-        // 3. Cart Sidebar (Right) - Order Tracking
-        VBox cartArea = new VBox(20);
-        cartArea.getStyleClass().add("cart-sidebar");
-        cartArea.setPrefWidth(320);
-        cartArea.setPadding(new Insets(20));
+        // --- 3. CART SIDEBAR (Right) ---
+        VBox cartArea = new VBox(15);
+        cartArea.setPrefWidth(350);
+        cartArea.setPadding(new Insets(30, 20, 30, 20));
+        cartArea.setStyle("-fx-background-color: white; -fx-border-color: #eee; -fx-border-width: 0 0 0 1;");
 
-        Label cartTitle = new Label("Your Order");
-        cartTitle.getStyleClass().add("cart-title");
+        Label cartTitle = new Label("My Order");
+        cartTitle.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
 
-        VBox cartItemsList = new VBox(10);
+        VBox cartItemsList = new VBox(15);
         VBox.setVgrow(cartItemsList, Priority.ALWAYS);
         cartItemsList.getChildren().add(new Label("No items added yet..."));
 
-        VBox cartFooter = new VBox(15);
-        cartFooter.setAlignment(Pos.CENTER);
+        VBox summaryBox = new VBox(8);
+        summaryBox.setPadding(new Insets(20, 0, 10, 0));
+        summaryBox.setStyle("-fx-border-color: #eee; -fx-border-width: 1 0 0 0;");
 
-        Label totalLabel = new Label("Total: $0.00");
-        totalLabel.getStyleClass().add("total-label");
+        Label subtotalLabel = new Label("Subtotal: Kshs. 0.00");
+        Label taxLabel = new Label("Tax (16%): Kshs. 0.00");
+        Label totalLabel = new Label("Total: Kshs. 0.00");
+        totalLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #e67e22;");
 
-        // Dynamic Cart Listener
+        Button checkoutBtn = new Button("Place Order");
+        checkoutBtn.setMaxWidth(Double.MAX_VALUE);
+        checkoutBtn.setStyle("-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 12; -fx-background-radius: 8; -fx-cursor: hand;");
+
         CartManager.getInstance().getCartItems().addListener((ListChangeListener<MenuItem>) c -> {
             cartItemsList.getChildren().clear();
+            double subtotal = CartManager.getInstance().calculateTotal();
+            double tax = subtotal * 0.16;
+            double total = subtotal + tax;
+
             for (MenuItem item : CartManager.getInstance().getCartItems()) {
                 HBox row = new HBox(10);
-                row.getStyleClass().add("cart-item-row");
                 row.setAlignment(Pos.CENTER_LEFT);
                 Label name = new Label(item.getName());
-                Label price = new Label("$" + String.format("%.2f", item.getPrice()));
-                Region spacer = new Region();
-                HBox.setHgrow(spacer, Priority.ALWAYS);
-                row.getChildren().addAll(name, spacer, price);
+                Label price = new Label("Kshs. " + String.format("%.0f", item.getPrice()));
+                price.setStyle("-fx-text-fill: #e67e22; -fx-font-weight: bold;");
+                Region s = new Region();
+                HBox.setHgrow(s, Priority.ALWAYS);
+                row.getChildren().addAll(name, s, price);
                 cartItemsList.getChildren().add(row);
             }
-            totalLabel.setText("Total: $" + String.format("%.2f", CartManager.getInstance().calculateTotal()));
+
+            subtotalLabel.setText("Subtotal: Kshs. " + String.format("%.2f", subtotal));
+            taxLabel.setText("Tax (16%): Kshs. " + String.format("%.2f", tax));
+            totalLabel.setText("Total: Kshs. " + String.format("%.2f", total));
+
             if (CartManager.getInstance().getCartItems().isEmpty()) {
                 cartItemsList.getChildren().add(new Label("No items added yet..."));
             }
         });
 
-        Button checkoutBtn = new Button("PLACE ORDER");
-        checkoutBtn.getStyleClass().add("checkout-button");
-        checkoutBtn.setMaxWidth(Double.MAX_VALUE);
-
-        // --- UPDATED CHECKOUT LOGIC WITH DYNAMIC TABLE NUMBER ---
         checkoutBtn.setOnAction(e -> {
             if (!CartManager.getInstance().getCartItems().isEmpty()) {
-                // Using AppSettings.getTableNumber() instead of hardcoded string
                 Order newOrder = new Order("ORD-" + System.currentTimeMillis(), AppSettings.getTableNumber());
-
-                for (MenuItem item : CartManager.getInstance().getCartItems()) {
-                    newOrder.addItem(item);
-                }
-
-                // Networking: Send to the Background Server
+                newOrder.getItems().addAll(CartManager.getInstance().getCartItems());
                 OrderClient.sendOrder(newOrder);
-
-                // Kitchen Sync: Add directly to the KitchenManager
                 KitchenManager.getInstance().addOrder(newOrder);
-
-                // UI Clean up
                 CartManager.getInstance().clearCart();
-                System.out.println("Order Sent from " + AppSettings.getTableNumber() + " successfully!");
+                new Alert(Alert.AlertType.INFORMATION, "Order sent to kitchen!").show();
             }
         });
 
-        cartFooter.getChildren().addAll(totalLabel, checkoutBtn);
-        cartArea.getChildren().addAll(cartTitle, cartItemsList, cartFooter);
+        summaryBox.getChildren().addAll(subtotalLabel, taxLabel, totalLabel);
+        cartArea.getChildren().addAll(cartTitle, cartItemsList, summaryBox, checkoutBtn);
 
         root.setLeft(sidebar);
         root.setCenter(scrollPane);
         root.setRight(cartArea);
 
-        Scene scene = new Scene(root, 1024, 768);
-        scene.getStylesheets().add(MenuView.class.getResource("/com/busyrestaurant/css/style.css").toExternalForm());
-
+        Scene scene = new Scene(root, 1200, 800);
         stage.setScene(scene);
         stage.setFullScreen(true);
+        stage.show();
+    }
+
+    public static void showCustomizeDialog(MenuItem item) {
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.setTitle("Customize " + item.getName());
+
+        VBox layout = new VBox(20);
+        layout.setPadding(new Insets(25));
+        layout.setStyle("-fx-background-color: white;");
+
+        Label title = new Label("Customize Your Order");
+        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+        VBox details = new VBox(5);
+        Label name = new Label(item.getName());
+        name.setStyle("-fx-font-size: 18px; -fx-text-fill: #333;");
+        Label price = new Label("Kshs. " + String.format("%.0f", item.getPrice()));
+        price.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #e67e22;");
+        details.getChildren().addAll(name, price);
+
+        GridPane modifierGrid = new GridPane();
+        modifierGrid.setHgap(10);
+        modifierGrid.setVgap(10);
+
+        String optionsStr = item.getCustomOptions();
+        if (optionsStr != null && !optionsStr.trim().isEmpty()) {
+            String[] options = optionsStr.split(",");
+            for (int i = 0; i < options.length; i++) {
+                ToggleButton tb = new ToggleButton(options[i].trim());
+                tb.setPrefWidth(160);
+                tb.setPrefHeight(40);
+                tb.setStyle("-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 5; -fx-cursor: hand;");
+
+                tb.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                    if (newVal) tb.setStyle("-fx-background-color: #fff3e0; -fx-border-color: #e67e22; -fx-border-radius: 5;");
+                    else tb.setStyle("-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 5;");
+                });
+
+                modifierGrid.add(tb, i % 2, i / 2);
+            }
+        } else {
+            modifierGrid.add(new Label("No customizations for this item."), 0, 0);
+        }
+
+        Button addBtn = new Button("Add to Order");
+        addBtn.setMaxWidth(Double.MAX_VALUE);
+        addBtn.setPadding(new Insets(12));
+        addBtn.setStyle("-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;");
+
+        addBtn.setOnAction(e -> {
+            CartManager.getInstance().addItem(item);
+            dialog.close();
+        });
+
+        layout.getChildren().addAll(title, details, new Label("Select Preferences:"), modifierGrid, addBtn);
+
+        dialog.setScene(new Scene(layout, 400, 500));
+        dialog.showAndWait();
     }
 
     private static void filterMenu(String category, Button activeBtn) {
         VBox sidebar = (VBox) activeBtn.getParent();
-        sidebar.getChildren().forEach(node -> node.getStyleClass().remove("category-button-active"));
-        activeBtn.getStyleClass().add("category-button-active");
+        sidebar.getChildren().forEach(n -> n.setStyle("-fx-background-color: transparent; -fx-text-fill: #555;"));
+        activeBtn.setStyle("-fx-background-color: #e67e22; -fx-text-fill: white; -fx-background-radius: 8;");
         updateGrid(category);
     }
 
     private static void updateGrid(String category) {
         foodGrid.getChildren().clear();
-        List<MenuItem> filtered = MenuManager.getInstance().getAllItems().stream()
-                .filter(item -> item.getCategory().equalsIgnoreCase(category))
-                .collect(Collectors.toList());
+
+        List<MenuItem> allItems = MenuManager.getInstance().getAllItems();
+        List<MenuItem> filtered;
+
+        if ("All".equalsIgnoreCase(category)) {
+            filtered = allItems;
+        } else {
+            filtered = allItems.stream()
+                    .filter(item -> item.getCategory().equalsIgnoreCase(category))
+                    .collect(Collectors.toList());
+        }
 
         for (MenuItem item : filtered) {
             foodGrid.getChildren().add(new FoodCard(item));
@@ -155,10 +224,11 @@ public class MenuView {
 
     private static Button createCategoryButton(String text, boolean isActive) {
         Button btn = new Button(text);
-        btn.getStyleClass().add("category-button");
-        if (isActive) {
-            btn.getStyleClass().add("category-button-active");
-        }
+        btn.setPrefWidth(180);
+        btn.setAlignment(Pos.CENTER_LEFT);
+        btn.setPadding(new Insets(10, 15, 10, 15));
+        if (isActive) btn.setStyle("-fx-background-color: #e67e22; -fx-text-fill: white; -fx-background-radius: 8;");
+        else btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #555;");
         return btn;
     }
 }

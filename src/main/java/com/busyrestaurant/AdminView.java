@@ -11,6 +11,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.util.Optional;
 
 public class AdminView {
 
@@ -70,31 +71,42 @@ public class AdminView {
         TableColumn<MenuItem, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-        TableColumn<MenuItem, Double> priceCol = new TableColumn<>("Price ($)");
+        // Updated column header to Kshs
+        TableColumn<MenuItem, Double> priceCol = new TableColumn<>("Price (Kshs)");
         priceCol.setCellValueFactory(new PropertyValueFactory<>("price"));
 
         TableColumn<MenuItem, String> catCol = new TableColumn<>("Category");
         catCol.setCellValueFactory(new PropertyValueFactory<>("category"));
 
-        table.getColumns().addAll(nameCol, priceCol, catCol);
+        // New Column to show defined preferences
+        TableColumn<MenuItem, String> optCol = new TableColumn<>("Preferences");
+        optCol.setCellValueFactory(new PropertyValueFactory<>("customOptions"));
 
-        // --- 4. FORM (CREATE WITH IMAGE UPLOAD) ---
+        table.getColumns().addAll(nameCol, priceCol, catCol, optCol);
+
+        // --- 4. FORM (CREATE WITH DYNAMIC PREFERENCES) ---
         VBox formContainer = new VBox(10);
         formContainer.setPadding(new Insets(15));
         formContainer.setStyle("-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 5;");
 
-        HBox inputs = new HBox(10);
-        inputs.setAlignment(Pos.CENTER_LEFT);
+        GridPane formGrid = new GridPane();
+        formGrid.setHgap(10);
+        formGrid.setVgap(10);
 
         TextField nameField = new TextField();
-        nameField.setPromptText("Food Name");
+        nameField.setPromptText("Food Name (e.g. Beef Burger)");
 
         TextField priceField = new TextField();
-        priceField.setPromptText("Price");
+        priceField.setPromptText("Price (e.g. 850)");
 
         ComboBox<String> catBox = new ComboBox<>();
         catBox.getItems().addAll("Appetizers", "Main Courses", "Drinks", "Desserts");
         catBox.setPromptText("Category");
+
+        // NEW FIELD: Admin defines the preferences here
+        TextField optionsField = new TextField();
+        optionsField.setPromptText("Preferences (comma-separated, e.g. Extra Sauce, No Onions, Spicy)");
+        optionsField.setPrefWidth(400);
 
         // Image Selection Logic
         final String[] selectedPath = {"default_food.png"};
@@ -105,55 +117,84 @@ public class AdminView {
         browseBtn.setOnAction(e -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Select Food Image");
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
-            );
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg"));
             File file = fileChooser.showOpenDialog(stage);
             if (file != null) {
-                selectedPath[0] = file.toURI().toString(); // Store as URI for JavaFX Image compatibility
+                selectedPath[0] = file.toURI().toString();
                 imgLabel.setText(file.getName());
                 imgLabel.setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
             }
         });
 
         Button addBtn = new Button("Add to Menu");
-        addBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;");
+        addBtn.setStyle("-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 20;");
 
         addBtn.setOnAction(e -> {
             try {
                 String name = nameField.getText();
                 double price = Double.parseDouble(priceField.getText());
                 String category = catBox.getValue();
+                String customOptions = optionsField.getText();
 
-                if (name.isEmpty() || category == null) return;
+                if (name.isEmpty() || category == null) {
+                    new Alert(Alert.AlertType.ERROR, "Please fill in all required fields.").show();
+                    return;
+                }
 
                 MenuItem newItem = new MenuItem("ID-" + System.currentTimeMillis(), name, "", price, category, selectedPath[0]);
+                // Save the preferences from the text field to the model
+                newItem.setCustomOptions(customOptions);
+
                 MenuManager.getInstance().addItem(newItem);
 
                 // Clear fields
                 nameField.clear();
                 priceField.clear();
+                optionsField.clear();
                 imgLabel.setText("No image chosen");
                 selectedPath[0] = "default_food.png";
+
+            } catch (NumberFormatException ex) {
+                new Alert(Alert.AlertType.ERROR, "Price must be a valid number.").show();
             } catch (Exception ex) {
                 System.out.println("Error adding item: " + ex.getMessage());
             }
         });
 
-        inputs.getChildren().addAll(nameField, priceField, catBox, browseBtn, imgLabel, addBtn);
-        formContainer.getChildren().addAll(new Label("Add New Item Details:"), inputs);
+        // Arrange form in a layout
+        HBox topRow = new HBox(10, nameField, priceField, catBox);
+        HBox midRow = new HBox(10, new Label("Options:"), optionsField);
+        midRow.setAlignment(Pos.CENTER_LEFT);
+        HBox bottomRow = new HBox(10, browseBtn, imgLabel, spacer, addBtn);
+        bottomRow.setAlignment(Pos.CENTER_LEFT);
 
-        // --- 5. DELETE ---
+        formContainer.getChildren().addAll(new Label("Add New Item Details:"), topRow, midRow, bottomRow);
+
+        // --- 5. DELETE LOGIC ---
         Button delBtn = new Button("Delete Selected Item");
         delBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;");
+
         delBtn.setOnAction(e -> {
             MenuItem selected = table.getSelectionModel().getSelectedItem();
-            if (selected != null) MenuManager.getInstance().removeItem(selected);
+            if (selected != null) {
+                Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+                confirm.setTitle("Delete Confirmation");
+                confirm.setHeaderText("Delete " + selected.getName() + "?");
+                confirm.setContentText("This action is permanent.");
+
+                Optional<ButtonType> result = confirm.showAndWait();
+                if (result.isPresent() && result.get() == ButtonType.OK) {
+                    MenuManager.getInstance().removeItem(selected);
+                    new Alert(Alert.AlertType.INFORMATION, selected.getName() + " deleted.").show();
+                }
+            } else {
+                new Alert(Alert.AlertType.WARNING, "Select an item to delete.").show();
+            }
         });
 
         root.getChildren().addAll(header, configBox, table, formContainer, delBtn);
 
-        Scene scene = new Scene(root, 1100, 800);
+        Scene scene = new Scene(root, 1100, 850);
         stage.setTitle("Admin Dashboard - BusyRestaurant");
         stage.setScene(scene);
         stage.show();

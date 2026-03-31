@@ -1,73 +1,91 @@
 package com.busyrestaurant;
 
 import com.busyrestaurant.model.MenuItem;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 
 public class FoodCard extends VBox {
 
     public FoodCard(MenuItem item) {
-        super(10);
-        this.getStyleClass().add("food-card");
-        this.setAlignment(Pos.CENTER);
+        // Spacing between elements
+        super(12);
+        this.setPadding(new Insets(0, 0, 15, 0));
+        this.setPrefWidth(280);
+        this.setStyle("-fx-background-color: white; -fx-background-radius: 15; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);");
 
-        // 1. Image Container
-        StackPane imageContainer = new StackPane();
-        imageContainer.getStyleClass().add("food-image-box");
-        imageContainer.setPrefSize(180, 140);
-
+        // --- 1. IMAGE SECTION ---
         ImageView imageView = new ImageView();
-        imageView.setFitWidth(160);
-        imageView.setFitHeight(120);
-        imageView.setPreserveRatio(true);
+        imageView.setFitWidth(280);
+        imageView.setFitHeight(180);
+        imageView.setPreserveRatio(false); // To fill the top area like your screenshot
+
+        // Clip the image to have rounded top corners
+        Rectangle clip = new Rectangle(280, 180);
+        clip.setArcWidth(30);
+        clip.setArcHeight(30);
+        imageView.setClip(clip);
 
         try {
             String path = item.getImagePath();
             Image img;
-
-            // CHECK: Is this an external file URI (from Admin Upload) or an internal resource?
             if (path.startsWith("file:") || path.startsWith("http")) {
-                // Load external file
-                img = new Image(path, true); // 'true' enables background loading
+                img = new Image(path, true);
             } else {
-                // Load from internal resources: src/main/resources/com/busyrestaurant/images/
-                String resourcePath = "/com/busyrestaurant/images/" + path;
-                img = new Image(getClass().getResourceAsStream(resourcePath));
+                img = new Image(getClass().getResourceAsStream("/com/busyrestaurant/images/" + path));
             }
-
             imageView.setImage(img);
-            imageContainer.getChildren().add(imageView);
-
         } catch (Exception e) {
-            // Fallback for missing images
-            Label errorLabel = new Label("Image Not Found");
-            errorLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: gray;");
-            imageContainer.getChildren().add(errorLabel);
-            System.err.println("Could not load image path: " + item.getImagePath());
+            // Fallback image handling
+            imageView.setStyle("-fx-background-color: #ddd;");
         }
 
-        // 2. Name and Price
+        // --- 2. TEXT CONTENT ---
+        VBox textContent = new VBox(5);
+        textContent.setPadding(new Insets(0, 15, 0, 15));
+
         Label nameLabel = new Label(item.getName());
-        nameLabel.getStyleClass().add("food-name");
+        nameLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #333;");
 
-        Label priceLabel = new Label("$" + String.format("%.2f", item.getPrice()));
-        priceLabel.getStyleClass().add("food-price");
+        Label descLabel = new Label("Freshly prepared " + item.getCategory().toLowerCase());
+        descLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #777;");
 
-        // 3. Add to Cart Button
-        Button addButton = new Button("+ Add to Cart");
-        addButton.getStyleClass().add("add-button");
-        addButton.setPrefWidth(150);
+        textContent.getChildren().addAll(nameLabel, descLabel);
 
+        // --- 3. BOTTOM BAR (Price & Add Button) ---
+        HBox bottomBar = new HBox();
+        bottomBar.setAlignment(Pos.CENTER_LEFT);
+        bottomBar.setPadding(new Insets(0, 15, 0, 15));
+
+        // UPDATED: Changed to Kshs.
+        Label priceLabel = new Label("Kshs. " + String.format("%.0f", item.getPrice()));
+        priceLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #e67e22;");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // UPDATED: Styled button to match your Orange theme
+        Button addButton = new Button("+ Add");
+        addButton.setStyle("-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold; " +
+                "-fx-background-radius: 8; -fx-padding: 8 20; -fx-cursor: hand;");
+
+        // STEP 3: Action now opens the Customization Dialog instead of adding immediately
         addButton.setOnAction(e -> {
-            CartManager.getInstance().addItem(item);
-            System.out.println("Added to cart: " + item.getName());
+            MenuView.showCustomizeDialog(item);
         });
 
-        this.getChildren().addAll(imageContainer, nameLabel, priceLabel, addButton);
+        bottomBar.getChildren().addAll(priceLabel, spacer, addButton);
+
+        // Add all components to the card
+        this.getChildren().addAll(imageView, textContent, bottomBar);
     }
 }
