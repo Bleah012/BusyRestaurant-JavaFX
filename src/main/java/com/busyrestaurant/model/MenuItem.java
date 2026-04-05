@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Column;
+import java.util.UUID;
 
 /**
  * Model class representing a food or drink item.
@@ -36,6 +37,22 @@ public class MenuItem {
     public MenuItem() {
     }
 
+    /**
+     * NEW CONSTRUCTOR: Matches the 5-argument call in MenuManager.
+     * Generates a unique ID automatically for new items.
+     */
+    public MenuItem(String name, String description, double price, String category, String customOptions) {
+        this.id = UUID.randomUUID().toString(); // Auto-generate ID
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.category = category;
+        this.customOptions = customOptions;
+    }
+
+    /**
+     * Full constructor for manual ID and Image Path assignment.
+     */
     public MenuItem(String id, String name, String description, double price, String category, String imagePath) {
         this.id = id;
         this.name = name;

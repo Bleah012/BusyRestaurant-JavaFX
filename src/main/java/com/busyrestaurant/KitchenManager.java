@@ -30,9 +30,14 @@ public class KitchenManager {
         activeOrders.add(order);
     }
 
-    // Called when the Chef clicks "Complete" or "Ready for Pickup"
+    /**
+     * Updated: Removes an order by its ID.
+     * Handles both "Cancel" from Customer and "Complete" from Chef.
+     */
     public void removeOrder(Order order) {
-        activeOrders.remove(order);
+        if (order != null) {
+            activeOrders.removeIf(o -> o.getOrderId().equals(order.getOrderId()));
+        }
     }
 
     /**
