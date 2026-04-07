@@ -59,7 +59,7 @@ public class KitchenView {
         // --- 3. SERVER & DYNAMIC SYNC ---
 
         // Start the server to listen for incoming network orders
-        // We only start it if it hasn't been started yet to avoid port conflicts
+        // We only startt it if it hasn't been started yet to avoid port conflicts
         OrderServer.startServer(order -> {
             Platform.runLater(() -> {
                 // Add the order to the manager, which triggers the listener below
